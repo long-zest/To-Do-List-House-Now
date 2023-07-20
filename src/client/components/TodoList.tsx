@@ -1,6 +1,7 @@
 import type { SVGProps } from 'react'
 
 import * as Checkbox from '@radix-ui/react-checkbox'
+import { useAutoAnimate } from '@formkit/auto-animate/react'
 
 import { api } from '@/utils/client/api'
 
@@ -63,28 +64,106 @@ import { api } from '@/utils/client/api'
  *  - https://auto-animate.formkit.com
  */
 
-export const TodoList = () => {
+interface statusProps {
+  status: string
+}
+
+const todoStatus: { [key: string]: ('completed' | 'pending')[] } = {
+  pending: ['pending'],
+  completed: ['completed'],
+  all: ['completed', 'pending'],
+}
+
+export const TodoList = ({ status }: statusProps) => {
+  const [parent] = useAutoAnimate()
+  const getStatus = (status: string) => {
+    return todoStatus[status] ?? ['completed', 'pending']
+  }
+
   const { data: todos = [] } = api.todo.getAll.useQuery({
-    statuses: ['completed', 'pending'],
+    statuses: getStatus(status),
   })
 
+  const apiContext = api.useContext()
+
+  const { mutate: deleteTodo, isLoading: isDeletingTodo } =
+    api.todo.delete.useMutation({
+      onSuccess: () => {
+        apiContext.todo.getAll.refetch()
+      },
+    })
+
+  const { mutate: updateStatus, isLoading: isUpdatingTodo } =
+    api.todoStatus.update.useMutation({
+      onSuccess: () => {
+        apiContext.todo.getAll.refetch()
+      },
+    })
+
+  const handleUpdate = (id: number, status: string) => {
+    switch (status) {
+      case 'completed':
+        updateStatus({
+          todoId: id,
+          status: 'pending',
+        })
+        break
+      default:
+        updateStatus({
+          todoId: id,
+          status: 'completed',
+        })
+        break
+    }
+  }
+
   return (
-    <ul className="grid grid-cols-1 gap-y-3">
+    <ul ref={parent} className="grid grid-cols-1 gap-y-3">
       {todos.map((todo) => (
         <li key={todo.id}>
-          <div className="flex items-center rounded-12 border border-gray-200 px-4 py-3 shadow-sm">
-            <Checkbox.Root
-              id={String(todo.id)}
-              className="flex h-6 w-6 items-center justify-center rounded-6 border border-gray-300 focus:border-gray-700 focus:outline-none data-[state=checked]:border-gray-700 data-[state=checked]:bg-gray-700"
-            >
-              <Checkbox.Indicator>
-                <CheckIcon className="h-4 w-4 text-white" />
-              </Checkbox.Indicator>
-            </Checkbox.Root>
+          <div
+            className={`flex items-center gap-4 self-stretch rounded-12 border border-gray-200 px-4 py-3 shadow-sm ${
+              todo.status === 'completed' ? 'bg-gray-50' : ''
+            }`}
+          >
+            <div className="flex flex-1 items-center gap-3">
+              <Checkbox.Root
+                id={String(todo.id)}
+                className="flex h-6 w-6 items-center justify-center gap-2.5 rounded-6 border border-gray-300 focus:border-gray-700 focus:outline-none data-[state=checked]:border-gray-700 data-[state=checked]:bg-gray-700"
+                onClick={() => {
+                  handleUpdate(todo.id, todo.status)
+                }}
+                disabled={isUpdatingTodo}
+                checked={todo.status === 'completed' ? true : false}
+              >
+                <Checkbox.Indicator>
+                  <CheckIcon className="h-4 w-4 text-white" />
+                </Checkbox.Indicator>
+              </Checkbox.Root>
 
-            <label className="block pl-3 font-medium" htmlFor={String(todo.id)}>
-              {todo.body}
-            </label>
+              <label
+                className={`block font-medium ${
+                  todo.status === 'completed'
+                    ? 'text-gray-500 line-through'
+                    : 'no-underline'
+                }`}
+                htmlFor={String(todo.id)}
+              >
+                {todo.body}
+              </label>
+            </div>
+
+            <button
+              className="flex items-center justify-center gap-2 p-1"
+              onClick={() => {
+                deleteTodo({
+                  id: todo.id,
+                })
+              }}
+              disabled={isDeletingTodo}
+            >
+              <XMarkIcon className="h-6 w-6" />
+            </button>
           </div>
         </li>
       ))}

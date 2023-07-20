@@ -53,7 +53,7 @@ export const CreateTodoForm = () => {
       />
 
       <button
-        type="button"
+        type="submit"
         disabled={isCreatingTodo}
         onClick={() => {
           createTodo({
@@ -61,6 +61,13 @@ export const CreateTodoForm = () => {
           })
           setTodoBody('')
         }}
+        onSubmit={() => {
+          createTodo({
+            body: todoBody,
+          })
+          setTodoBody('')
+        }}
+        className="flex items-center justify-center gap-2 rounded-full bg-gray-700 px-5 py-2 text-white"
       >
         Add
       </button>

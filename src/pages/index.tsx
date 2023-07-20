@@ -1,3 +1,5 @@
+import * as Tabs from '@radix-ui/react-tabs'
+
 import { CreateTodoForm } from '@/client/components/CreateTodoForm'
 import { TodoList } from '@/client/components/TodoList'
 
@@ -24,9 +26,43 @@ const Index = () => {
           Todo App
         </h1>
 
-        <div className="pt-10">
-          <TodoList />
-        </div>
+        <Tabs.Root className="pt-10" defaultValue="tab-all">
+          <Tabs.List className="flex items-center gap-2 self-stretch">
+            <Tabs.Trigger
+              value="tab-all"
+              className="flex items-center justify-center gap-2 rounded-full border border-gray-200 px-6 py-3 transition-all duration-500 data-[state=active]:bg-gray-700 data-[state=active]:text-white"
+            >
+              All
+            </Tabs.Trigger>
+            <Tabs.Trigger
+              value="tab-pending"
+              className="flex items-center justify-center gap-2 rounded-full border border-gray-200 px-6 py-3 transition-all duration-500 data-[state=active]:bg-gray-700 data-[state=active]:text-white"
+            >
+              Pending
+            </Tabs.Trigger>
+            <Tabs.Trigger
+              value="tab-completed"
+              className="flex items-center justify-center gap-2 rounded-full border border-gray-200 px-6 py-3 transition-all duration-500 data-[state=active]:bg-gray-700 data-[state=active]:text-white"
+            >
+              Completed
+            </Tabs.Trigger>
+          </Tabs.List>
+          <Tabs.Content value="tab-all">
+            <div className="pt-10">
+              <TodoList status={'all'} />
+            </div>
+          </Tabs.Content>
+          <Tabs.Content value="tab-pending">
+            <div className="pt-10">
+              <TodoList status="pending" />
+            </div>
+          </Tabs.Content>
+          <Tabs.Content value="tab-completed">
+            <div className="pt-10">
+              <TodoList status="completed" />
+            </div>
+          </Tabs.Content>
+        </Tabs.Root>
 
         <div className="pt-10">
           <CreateTodoForm />
