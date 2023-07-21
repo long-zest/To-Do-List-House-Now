@@ -64,20 +64,25 @@ import { api } from '@/utils/client/api'
  *  - https://auto-animate.formkit.com
  */
 
+const PENDING = 'pending'
+const COMPLETED = 'completed'
+
 interface statusProps {
   status: string
 }
 
-const todoStatus: { [key: string]: ('completed' | 'pending')[] } = {
-  pending: ['pending'],
-  completed: ['completed'],
-  all: ['completed', 'pending'],
+type statusType = ('completed' | 'pending')[]
+
+const todoStatus: { [key: string]: statusType } = {
+  pending: [PENDING],
+  completed: [COMPLETED],
+  all: [COMPLETED, PENDING],
 }
 
 export const TodoList = ({ status }: statusProps) => {
   const [parent] = useAutoAnimate()
   const getStatus = (status: string) => {
-    return todoStatus[status] ?? ['completed', 'pending']
+    return todoStatus[status] ?? [COMPLETED, PENDING]
   }
 
   const { data: todos = [] } = api.todo.getAll.useQuery({
@@ -102,16 +107,16 @@ export const TodoList = ({ status }: statusProps) => {
 
   const handleUpdate = (id: number, status: string) => {
     switch (status) {
-      case 'completed':
+      case COMPLETED:
         updateStatus({
           todoId: id,
-          status: 'pending',
+          status: PENDING,
         })
         break
       default:
         updateStatus({
           todoId: id,
-          status: 'completed',
+          status: COMPLETED,
         })
         break
     }
@@ -123,7 +128,7 @@ export const TodoList = ({ status }: statusProps) => {
         <li key={todo.id}>
           <div
             className={`flex items-center gap-4 self-stretch rounded-12 border border-gray-200 px-4 py-3 shadow-sm ${
-              todo.status === 'completed' ? 'bg-gray-50' : ''
+              todo.status === COMPLETED ? 'bg-gray-50' : ''
             }`}
           >
             <div className="flex flex-1 items-center gap-3">
@@ -134,7 +139,7 @@ export const TodoList = ({ status }: statusProps) => {
                   handleUpdate(todo.id, todo.status)
                 }}
                 disabled={isUpdatingTodo}
-                checked={todo.status === 'completed' ? true : false}
+                checked={todo.status === COMPLETED ? true : false}
               >
                 <Checkbox.Indicator>
                   <CheckIcon className="h-4 w-4 text-white" />
@@ -143,7 +148,7 @@ export const TodoList = ({ status }: statusProps) => {
 
               <label
                 className={`block font-medium ${
-                  todo.status === 'completed'
+                  todo.status === COMPLETED
                     ? 'text-gray-500 line-through'
                     : 'no-underline'
                 }`}
